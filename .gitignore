@@ -1,0 +1,6 @@
+*.pyc
+sql/
+.ipynb_checkpoints
+.env
+*.json
+*.ipynb
