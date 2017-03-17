@@ -42,16 +42,15 @@ class BigQueryClient():
         for row in response['rows']:
             print('\t'.join(field['v'] for field in row['f']))
 
-    def output_df(self, response):
+    def convert_res_to_df(self, response):
         '''結果をpandas.DataFrameで成形'''
         columns = [field['name'] for field in response['schema']['fields']]
         rows = [[field['v'] for field in row['f']] for row in response['rows']]
         df = pd.DataFrame(rows, columns=columns)
         return df
 
-    def output_csv(self, response, csv_path='test.csv', index=False):
-        '''結果をpandas.DataFrameで成形したあとCSVに出力'''
-        df = self.output_df(response)
+    def save_df_to_csv(self, df, csv_path='test.csv', index=False):
+        '''pandas.DataFrame型のデータをCSVに出力'''
         with codecs.open(os.path.join(os.curdir, '{}'.format(csv_path)), 'w', encoding='sjis') as fd:
             fd.write(df.to_csv(index=index))
         return csv_path
