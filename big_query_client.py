@@ -4,6 +4,7 @@ from __future__ import unicode_literals, print_function
 
 import six
 import os
+import codecs
 from dotenv import load_dotenv
 
 import googleapiclient.discovery
@@ -48,13 +49,23 @@ class BigQueryClient():
         df = pd.DataFrame(rows, columns=columns)
         return df
 
+    def output_csv(self, response, csv_path='test.csv', index=False):
+        '''結果をpandas.DataFrameで成形したあとCSVに出力'''
+        columns = [field['name'] for field in response['schema']['fields']]
+        rows = [[field['v'] for field in row['f']] for row in response['rows']]
+        df = pd.DataFrame(rows, columns=columns)
+        with codecs.open(os.path.join(os.curdir, '{}'.format(csv_path)), 'w', encoding='sjis') as fd:
+            fd.write(df.to_csv(index=index))
+        return csv_path
+
     def example_query(self):
         '''例のクエリを返す'''
         query = '''
-        select name, year, max(prcp) as max_prcp from(
-            select stn, wban, year, prcp from table_query([bigquery-public-data:noaa_gsod], 'table_id contains "gsod"')
-        ) a join [bigquery-public-data:noaa_gsod.stations] b
-        on a.stn=b.usaf and a.wban=b.wban where name is not null and name<>"" and prcp < 99.99 group by name, year order by 1 asc, 2 asc limit 10
+        select name, year, max(prcp) as max_prcp, avg(prcp) as avg_prcp from(
+          select usaf, wban, name from [bigquery-public-data:noaa_gsod.stations] where name is not null and name<>""
+        ) a join (
+          select stn, wban, year, prcp from table_query([bigquery-public-data:noaa_gsod], 'table_id contains "gsod"')
+        ) b on a.usaf=b.stn and a.wban=b.wban group by name, year
         '''[1:-1]
         return query
 
