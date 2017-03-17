@@ -51,9 +51,7 @@ class BigQueryClient():
 
     def output_csv(self, response, csv_path='test.csv', index=False):
         '''結果をpandas.DataFrameで成形したあとCSVに出力'''
-        columns = [field['name'] for field in response['schema']['fields']]
-        rows = [[field['v'] for field in row['f']] for row in response['rows']]
-        df = pd.DataFrame(rows, columns=columns)
+        df = self.output_df(response)
         with codecs.open(os.path.join(os.curdir, '{}'.format(csv_path)), 'w', encoding='sjis') as fd:
             fd.write(df.to_csv(index=index))
         return csv_path
